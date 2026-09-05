@@ -14,23 +14,12 @@ import { useRollAnimation } from "@/hooks/use-roll-animation";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { deckRemaining, remainingTotals } from "@/lib/dice";
 import { buzz, buzzRobber, prefersReducedMotion } from "@/lib/haptics";
-import {
-  LOG_DISPLAY,
-  initialRollState,
-  isRollState,
-  lastRoll,
-  recentRolls,
-  rollReducer,
-  type DiceMode,
-  type RollAction,
-  type RollState,
-} from "@/lib/roll-state";
+import { LOG_DISPLAY, lastRoll, recentRolls, rollReducer, type DiceMode, type RollAction, type RollEntry, type RollState } from "@/lib/roll-state";
 import { DICE_TOTALS, TOKEN_NUMBERS } from "@/lib/rules";
-import { isBoolean, loadJSON, saveJSON } from "@/lib/storage";
+import { isBoolean } from "@/lib/storage";
 import type { UiMode } from "@/lib/ui-state";
 import { cn } from "@/lib/utils";
 
-const ROLL_KEY = "roll:v1";
 const ANIMATE_KEY = "animate:v1";
 const SHAKE_MS = 600;
 
@@ -41,25 +30,29 @@ const DICE_MODES = [
 
 export interface RollTabProps {
   mode: UiMode;
-  /** Player names in turn order. Enables the roller label and the robber checklist. */
+  /** Roll state lives in App so a new game can clear it. */
+  state: RollState;
+  onChange: (next: RollState) => void;
+  /** Player names in seating order. Enables the roller label and the robber checklist. */
   playerNames?: string[];
-  /** Whose turn it is; the roll is attributed to this player. */
-  currentPlayerIndex?: number;
+  /** Index of the player who rolls next; the roll is attributed to them. */
+  rollerIndex?: number;
   /** Called after a roll settles so the game can advance the turn. */
   onRolled?: (playerIndex: number | undefined, total: number) => void;
+  /** Called when the last roll is undone so the game can step the turn back. */
+  onUndoRoll?: (entry: RollEntry) => void;
   /** 5-6 players: remind the table of the special building phase. */
   specialBuildPhase?: boolean;
 }
 
-export const RollTab = ({ mode, playerNames, currentPlayerIndex, onRolled, specialBuildPhase = false }: RollTabProps) => {
+export const RollTab = ({ mode, state, onChange, playerNames, rollerIndex, onRolled, onUndoRoll, specialBuildPhase = false }: RollTabProps) => {
   const full = mode === "full";
   const isMobile = useIsMobile();
 
-  // useState over useReducer: a roll is computed first (to learn the total for
-  // haptics and the robber sheet) and then stored, so the RNG runs once.
-  const [state, setState] = useState<RollState>(() => loadJSON(ROLL_KEY, isRollState) ?? initialRollState());
-  const dispatch = useCallback((action: RollAction) => setState((s) => rollReducer(s, action)), []);
-  useEffect(() => saveJSON(ROLL_KEY, state), [state]);
+  // A roll is computed first (to learn the total for haptics and the robber
+  // sheet) and then stored, so the RNG runs exactly once per roll.
+  const dispatch = useCallback((action: RollAction) => onChange(rollReducer(state, action)), [onChange, state]);
+  const currentPlayerIndex = rollerIndex;
 
   const [animate, setAnimate] = usePersistedState<boolean>(ANIMATE_KEY, () => !prefersReducedMotion(), isBoolean);
   const { rolling, start } = useRollAnimation(animate);
@@ -81,7 +74,7 @@ export const RollTab = ({ mode, playerNames, currentPlayerIndex, onRolled, speci
     const before = deckRemaining(state.deck);
     start(() => {
       const next = rollReducer(state, { type: "roll", playerIndex: currentPlayerIndex });
-      setState(next);
+      onChange(next);
       const entry = lastRoll(next);
       if (!entry) return;
       if (state.mode === "deck" && deckRemaining(next.deck) > before) {
@@ -97,11 +90,14 @@ export const RollTab = ({ mode, playerNames, currentPlayerIndex, onRolled, speci
       }
       onRolled?.(currentPlayerIndex, entry.total);
     });
-  }, [isRolling, start, state, currentPlayerIndex, onRolled]);
+  }, [isRolling, start, state, currentPlayerIndex, onRolled, onChange]);
 
   const undo = () => {
-    if (isRolling || state.log.length === 0) return;
+    if (isRolling) return;
+    const entry = lastRoll(state);
+    if (!entry) return;
     dispatch({ type: "undo" });
+    onUndoRoll?.(entry);
     setRobberOpen(false);
   };
 
