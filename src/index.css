@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens. All colors are HSL triplets consumed by tailwind.config.ts. */
+@layer base {
+  :root {
+    /* Parchment table, dark wood text */
+    --background: 40 38% 93%;
+    --foreground: 25 30% 14%;
+
+    --card: 38 40% 98%;
+    --card-foreground: 25 30% 14%;
+
+    --popover: 38 40% 98%;
+    --popover-foreground: 25 30% 14%;
+
+    /* Wood */
+    --primary: 25 55% 34%;
+    --primary-foreground: 40 40% 96%;
+
+    /* Sea */
+    --secondary: 202 55% 34%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 38 25% 88%;
+    --muted-foreground: 25 15% 40%;
+
+    /* Wheat */
+    --accent: 42 88% 52%;
+    --accent-foreground: 25 30% 14%;
+
+    /* Brick */
+    --destructive: 10 68% 44%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 35 25% 80%;
+    --input: 35 25% 84%;
+    --ring: 25 55% 34%;
+
+    --radius: 0.75rem;
+
+    /* Catan palette */
+    --sea: 202 60% 36%;
+    --wood: 25 55% 34%;
+    --forest: 140 38% 28%;
+    --pasture: 92 50% 50%;
+    --fields: 44 92% 54%;
+    --hills: 16 68% 46%;
+    --mountains: 214 14% 48%;
+    --desert: 40 45% 76%;
+    --die-red: 2 70% 46%;
+    --die-yellow: 46 96% 56%;
+    --robber: 0 0% 15%;
+  }
+
+  .dark {
+    /* Night sea */
+    --background: 205 40% 10%;
+    --foreground: 40 30% 92%;
+
+    --card: 205 32% 14%;
+    --card-foreground: 40 30% 92%;
+
+    --popover: 205 32% 14%;
+    --popover-foreground: 40 30% 92%;
+
+    /* Wheat leads in the dark */
+    --primary: 42 88% 56%;
+    --primary-foreground: 25 30% 12%;
+
+    --secondary: 202 45% 40%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 205 25% 20%;
+    --muted-foreground: 40 18% 68%;
+
+    --accent: 25 55% 44%;
+    --accent-foreground: 40 40% 96%;
+
+    --destructive: 6 68% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 205 22% 26%;
+    --input: 205 22% 22%;
+    --ring: 42 88% 56%;
+
+    --sea: 205 55% 28%;
+    --wood: 25 45% 40%;
+    --forest: 140 34% 32%;
+    --pasture: 92 42% 46%;
+    --fields: 44 85% 55%;
+    --hills: 16 62% 48%;
+    --mountains: 214 14% 55%;
+    --desert: 40 30% 60%;
+    --die-red: 2 68% 50%;
+    --die-yellow: 46 94% 58%;
+    --robber: 0 0% 10%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    /* Bottom tab bar on phones sits above the home indicator. */
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    /* Fixed sea backdrop with a faint hex grid. A fixed pseudo-element
+       instead of background-attachment: fixed, which iOS Safari ignores. */
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(ellipse at top, hsl(var(--sea) / 0.35), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100' viewBox='0 0 56 100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23000' stroke-opacity='0.07' stroke-width='1.5'/%3E%3Cpath d='M28 0L28 34L0 50M28 34L56 50' fill='none' stroke='%23000' stroke-opacity='0.07' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-size: auto, 56px 100px;
+    pointer-events: none;
+  }
+
+  .dark body::before {
+    background-image:
+      radial-gradient(ellipse at top, hsl(var(--sea) / 0.6), transparent 65%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100' viewBox='0 0 56 100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23fff' stroke-opacity='0.06' stroke-width='1.5'/%3E%3Cpath d='M28 0L28 34L0 50M28 34L56 50' fill='none' stroke='%23fff' stroke-opacity='0.06' stroke-width='1.5'/%3E%3C/svg%3E");
+  }
+
+  /* Number inputs: hide spinners, steppers handle it */
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Regular hexagon, pointy-top */
+  .clip-hex {
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+}
