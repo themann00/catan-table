@@ -1,10 +1,14 @@
-import { Minus, Plus } from "lucide-react";
+import { useState } from "react";
+import { Hexagon, Minus, Plus } from "lucide-react";
+import { HexBoard } from "@/components/HexBoard";
 import { ReferenceTable } from "@/components/ReferenceTable";
+import { Segmented } from "@/components/Segmented";
 import { SpotBuilder } from "@/components/SpotBuilder";
 import { SpotStats } from "@/components/SpotStats";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { spotAtCorner, type Board } from "@/lib/board";
 import { formatPercent } from "@/lib/format";
 import { compareShare, emptySpot, expectedCardsInTurns, isSpot, spotPips, type Spot } from "@/lib/odds";
 import { isBoolean, isNumber } from "@/lib/storage";
@@ -22,21 +26,67 @@ const describeLead = (share: number): string => {
   return ratio >= 2 ? `${lead} produces ${ratio.toFixed(1)}× as much.` : `${lead} produces ${formatPercent(ratio - 1)} more.`;
 };
 
+const TARGETS = [
+  { value: "A", label: "Set A" },
+  { value: "B", label: "Set B" },
+] as const;
+
 const MIN_TURNS = 1;
 const MAX_TURNS = 30;
 const isTurns = (v: unknown): v is number => isNumber(v) && v >= MIN_TURNS && v <= MAX_TURNS;
 
-export const OddsTab = () => {
+export interface OddsTabProps {
+  /** The generated board, for picking a spot by tapping an intersection. */
+  board: Board;
+}
+
+export const OddsTab = ({ board }: OddsTabProps) => {
   const [spotA, setSpotA] = usePersistedState<Spot>(SPOT_A_KEY, emptySpot, isSpot);
   const [spotB, setSpotB] = usePersistedState<Spot>(SPOT_B_KEY, emptySpot, isSpot);
   const [compare, setCompare] = usePersistedState<boolean>(COMPARE_KEY, false, isBoolean);
   const [turns, setTurns] = usePersistedState<number>(TURNS_KEY, 10, isTurns);
+  const [pickFromBoard, setPickFromBoard] = useState(false);
+  const [target, setTarget] = useState<"A" | "B">("A");
+  const [pickedCorner, setPickedCorner] = useState<number | null>(null);
 
   const share = compareShare(spotA, spotB);
   const bothSet = spotA.tokens.length > 0 && spotB.tokens.length > 0;
 
+  const pickCorner = (cornerId: number) => {
+    const spot = spotAtCorner(board, cornerId);
+    setPickedCorner(cornerId);
+    if (target === "B" && compare) setSpotB(spot);
+    else setSpotA(spot);
+  };
+
   return (
     <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <CardTitle className="text-base">Pick from the board</CardTitle>
+              <CardDescription>Tap an intersection on the generated board to load its hexes.</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              {pickFromBoard && compare && (
+                <Segmented value={target} options={TARGETS} onChange={setTarget} label="Which spot to set" size="compact" />
+              )}
+              <Button variant={pickFromBoard ? "secondary" : "outline"} onClick={() => setPickFromBoard((v) => !v)} aria-expanded={pickFromBoard}>
+                <Hexagon /> {pickFromBoard ? "Hide board" : "Show board"}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        {pickFromBoard && (
+          <CardContent>
+            <div className="overflow-hidden rounded-lg">
+              <HexBoard board={board} onCornerTap={pickCorner} selectedCorner={pickedCorner} label="Board: tap an intersection to load it as a spot" />
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Settlement spot</CardTitle>

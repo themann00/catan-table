@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { useBoard } from "@/hooks/use-board";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import { useTheme } from "@/hooks/use-theme";
@@ -47,6 +48,7 @@ const App = () => {
   const [history, setHistory] = usePersistedState<GameSummary[]>(HISTORY_KEY, [], isGameHistory);
   const [roll, setRoll] = usePersistedState<RollState>(ROLL_KEY, initialRollState, isRollState);
   const dispatchGame = useCallback((action: GameAction) => setGame((g) => gameReducer(g, action)), [setGame]);
+  const [board, setBoard] = useBoard();
 
   // Record a win once, buzz, and open the summary.
   const [winOpen, setWinOpen] = useState(false);
@@ -131,8 +133,8 @@ const App = () => {
           specialBuildPhase={playing && rulesFor(game).specialBuildPhase}
         />
       )}
-      {activeTab === "odds" && <OddsTab />}
-      {activeTab === "board" && <BoardTab mode={mode} />}
+      {activeTab === "odds" && <OddsTab board={board} />}
+      {activeTab === "board" && <BoardTab mode={mode} board={board} onBoardChange={setBoard} />}
       {activeTab === "game" && (
         <GameTab mode={mode} game={game} dispatch={dispatchGame} history={history} onNewGame={newGame} winOpen={winOpen} onWinClose={() => setWinOpen(false)} />
       )}

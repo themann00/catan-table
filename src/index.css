@@ -164,3 +164,17 @@
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   }
 }
+
+/* Print: the board alone, edge to edge, no chrome or backdrop. */
+@media print {
+  body::before,
+  body::after,
+  header,
+  nav {
+    display: none !important;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+}
