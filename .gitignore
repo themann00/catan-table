@@ -17,10 +17,10 @@ dist-ssr
 # vite-plugin-pwa dev output
 dev-dist
 
-# Vercel CLI link
-.vercel
-.playwright-mcp
-/*.png
-
+# Vercel CLI link and the OIDC token it pulls into .env.local
 .vercel
 .env*
+
+# Playwright MCP output
+.playwright-mcp
+/*.png

@@ -63,7 +63,7 @@ export const TabBar = ({ mode, tab, onTabChange, placement }: TabBarProps) => {
               <Icon className={cn(bottom ? "h-6 w-6" : "h-4 w-4")} aria-hidden="true" />
               <span>{t.label}</span>
               {!bottom && (
-                <kbd className="ml-1 hidden rounded border border-border/70 px-1 text-[10px] font-normal text-muted-foreground lg:inline">
+                <kbd aria-hidden="true" className="ml-1 hidden rounded border border-border/70 px-1 text-[10px] font-normal text-muted-foreground lg:inline">
                   {t.shortcut}
                 </kbd>
               )}
