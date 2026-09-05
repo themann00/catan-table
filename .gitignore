@@ -21,3 +21,6 @@ dev-dist
 .vercel
 .playwright-mcp
 /*.png
+
+.vercel
+.env*
