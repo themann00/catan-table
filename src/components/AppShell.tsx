@@ -28,7 +28,13 @@ export const AppShell = ({ mode, onModeChange, tab, onTabChange, theme, onToggle
   const isMobile = useIsMobile();
   return (
   <div className="flex min-h-dvh flex-col">
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-md">
+    <a
+      href="#main"
+      className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
+    >
+      Skip to content
+    </a>
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-md print:hidden">
       <div className="mx-auto flex max-w-[960px] items-center gap-3 px-3 py-2 sm:px-4">
         <a href="/" className="flex min-h-11 min-w-11 items-center gap-2 rounded-md p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Catan Table home">
           <HexLogo className="h-9 w-9" />

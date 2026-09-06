@@ -169,7 +169,7 @@ export const PlayerRow = ({ game, player, index, dispatch, full, onDragStart, on
             <Button
               variant="ghost"
               size="icon"
-              className="h-11 w-9"
+              className="h-11 w-11"
               onClick={() => dispatch({ type: "setHiddenVp", id: player.id, value: player.hiddenVp - 1, now: now() })}
               disabled={player.hiddenVp <= 0 || game.status === "finished"}
               aria-label={`${player.name} hidden VP minus one`}
@@ -180,7 +180,7 @@ export const PlayerRow = ({ game, player, index, dispatch, full, onDragStart, on
             <Button
               variant="ghost"
               size="icon"
-              className="h-11 w-9"
+              className="h-11 w-11"
               onClick={() => dispatch({ type: "setHiddenVp", id: player.id, value: player.hiddenVp + 1, now: now() })}
               disabled={game.status === "finished"}
               aria-label={`${player.name} hidden VP plus one`}
@@ -231,7 +231,7 @@ export const PlayerRow = ({ game, player, index, dispatch, full, onDragStart, on
           onChange={(e) => dispatch({ type: "setHiddenNote", id: player.id, note: e.target.value })}
           placeholder="Private note (e.g. 2 VP cards in hand)"
           aria-label={`${player.name} private note`}
-          className="mt-2 h-10 text-sm sm:ml-10 sm:w-[calc(100%-2.5rem)]"
+          className="mt-2 h-11 text-sm sm:ml-10 sm:w-[calc(100%-2.5rem)]"
           maxLength={120}
         />
       )}

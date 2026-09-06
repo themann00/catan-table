@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { Card, CardContent } from "@/components/ui/card";
 import { useBoard } from "@/hooks/use-board";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { usePersistedState } from "@/hooks/use-persisted-state";
@@ -21,10 +22,19 @@ import {
 import { buzzWin } from "@/lib/haptics";
 import { initialRollState, isRollState, rollReducer, type RollEntry, type RollState } from "@/lib/roll-state";
 import { isTabId, isUiMode, resolveTab, visibleTabs, type TabId, type UiMode } from "@/lib/ui-state";
-import { BoardTab } from "@/pages/BoardTab";
-import { GameTab } from "@/pages/GameTab";
-import { OddsTab } from "@/pages/OddsTab";
 import { RollTab } from "@/pages/RollTab";
+
+// The Roll tab is what the table opens to; the others load on first visit
+// (and are precached by the service worker for offline use).
+const OddsTab = lazy(() => import("@/pages/OddsTab").then((m) => ({ default: m.OddsTab })));
+const BoardTab = lazy(() => import("@/pages/BoardTab").then((m) => ({ default: m.BoardTab })));
+const GameTab = lazy(() => import("@/pages/GameTab").then((m) => ({ default: m.GameTab })));
+
+const TabFallback = () => (
+  <Card aria-busy="true">
+    <CardContent className="p-6 text-center text-sm text-muted-foreground">Loading…</CardContent>
+  </Card>
+);
 
 const MODE_KEY = "mode:v1";
 const TAB_KEY = "tab:v1";
@@ -133,11 +143,13 @@ const App = () => {
           specialBuildPhase={playing && rulesFor(game).specialBuildPhase}
         />
       )}
-      {activeTab === "odds" && <OddsTab board={board} />}
-      {activeTab === "board" && <BoardTab mode={mode} board={board} onBoardChange={setBoard} />}
-      {activeTab === "game" && (
-        <GameTab mode={mode} game={game} dispatch={dispatchGame} history={history} onNewGame={newGame} winOpen={winOpen} onWinClose={() => setWinOpen(false)} />
-      )}
+      <Suspense fallback={<TabFallback />}>
+        {activeTab === "odds" && <OddsTab board={board} />}
+        {activeTab === "board" && <BoardTab mode={mode} board={board} onBoardChange={setBoard} />}
+        {activeTab === "game" && (
+          <GameTab mode={mode} game={game} dispatch={dispatchGame} history={history} onNewGame={newGame} winOpen={winOpen} onWinClose={() => setWinOpen(false)} />
+        )}
+      </Suspense>
     </AppShell>
   );
 };

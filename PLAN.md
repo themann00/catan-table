@@ -2,6 +2,8 @@
 
 Brief: [PROMPT.md](PROMPT.md). Reference implementation: `risk-dice-duel`.
 
+Status 2026-09-05: all six tiers shipped to `main`, each verified with tsc, lint, Vitest, build, and Playwright at 390, 768, and 1280 before its commit. 96 tests. Production deploys from `main` on Vercel; the custom domain waits on a DNS record.
+
 ## Tiers
 
 Each tier ends with tsc, lint, Vitest, build, and a Playwright pass at 390, 768, and 1280, then one conventional commit pushed to `main`, then a check that the Vercel production deploy and the CI run are green.
