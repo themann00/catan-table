@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ModeToggle";
 import { TabBar } from "@/components/TabBar";
 import { HexLogo } from "@/components/HexLogo";
+import { LegendButton } from "@/components/Legend";
+import type { Player } from "@/lib/game-state";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import type { Theme } from "@/hooks/use-theme";
 import type { TabId, UiMode } from "@/lib/ui-state";
 
 interface AppShellProps {
+  /** Current game's players, for the color key. */
+  players: Player[];
   mode: UiMode;
   onModeChange: (mode: UiMode) => void;
   tab: TabId;
@@ -23,7 +27,7 @@ interface AppShellProps {
  * and the active tab's content. Content gets bottom padding on phones so
  * the tab bar never covers the last control.
  */
-export const AppShell = ({ mode, onModeChange, tab, onTabChange, theme, onToggleTheme, children }: AppShellProps) => {
+export const AppShell = ({ players, mode, onModeChange, tab, onTabChange, theme, onToggleTheme, children }: AppShellProps) => {
   // One tab bar in the DOM at a time so tab ids stay unique for aria-labelledby.
   const isMobile = useIsMobile();
   return (
@@ -63,6 +67,8 @@ export const AppShell = ({ mode, onModeChange, tab, onTabChange, theme, onToggle
     <main className="mx-auto w-full max-w-[960px] flex-1 px-3 pb-[calc(5rem+var(--safe-bottom))] pt-4 sm:px-4 sm:pb-8" id="main" role="tabpanel" aria-labelledby={`tab-${tab}`}>
       {children}
     </main>
+
+    <LegendButton players={players} tab={tab} isMobile={isMobile} />
 
     {/* Phone tabs: fixed bottom bar within thumb reach */}
     {isMobile && <TabBar mode={mode} tab={tab} onTabChange={onTabChange} placement="bottom" />}

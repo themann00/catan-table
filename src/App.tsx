@@ -130,7 +130,7 @@ const App = () => {
   );
 
   return (
-    <AppShell mode={mode} onModeChange={setMode} tab={activeTab} onTabChange={setTab} theme={theme} onToggleTheme={toggleTheme}>
+    <AppShell players={game.players} mode={mode} onModeChange={setMode} tab={activeTab} onTabChange={setTab} theme={theme} onToggleTheme={toggleTheme}>
       {activeTab === "roll" && (
         <RollTab
           mode={mode}

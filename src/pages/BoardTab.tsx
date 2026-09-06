@@ -4,7 +4,11 @@ import { HexBoard } from "@/components/HexBoard";
 import { Segmented } from "@/components/Segmented";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { BOARD_URL_PARAM } from "@/hooks/use-board";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { balanceReport, clearLocks, encodeBoard, generateBoard, toggleLock, type Board, type SetupMode } from "@/lib/board";
+import { copyText, shareUrl } from "@/lib/clipboard";
 import { RESOURCE_BAR } from "@/lib/resource-colors";
 import { RESOURCES, RESOURCE_LABEL, RULE_SETS, type RuleSetId } from "@/lib/rules";
 import { seedToString } from "@/lib/rng";
@@ -27,10 +31,11 @@ const MODES = [
   { value: "balanced", label: "Balanced", hint: "Spread pips, no resource clusters" },
 ] as const;
 
-const shareUrl = (board: Board): string => {
+const boardLink = (board: Board): string => {
   const url = new URL(window.location.href);
   url.search = "";
-  url.searchParams.set("b", encodeBoard(board));
+  url.hash = "";
+  url.searchParams.set(BOARD_URL_PARAM, encodeBoard(board));
   return url.toString();
 };
 
@@ -40,23 +45,26 @@ export const BoardTab = ({ mode, board, onBoardChange }: BoardTabProps) => {
   const lockedCount = board.hexes.filter((h) => h.locked).length;
   const report = full ? balanceReport(board) : null;
   const [tableView, setTableView] = useState(false);
-  const [copied, setCopied] = useState<"idle" | "copied" | "failed">("idle");
+  const [copied, setCopied] = useState<"idle" | "copied" | "shared" | "failed">("idle");
+  const isMobile = useIsMobile();
 
   const regenerate = (layout: RuleSetId = board.layout, setup: SetupMode = board.mode, keep = true) =>
     onBoardChange(generateBoard({ layout, mode: setup, keep: keep ? board : undefined }));
 
-  const copyLink = async () => {
-    const url = shareUrl(board);
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied("copied");
-    } catch {
-      setCopied("failed");
+  const link = boardLink(board);
+
+  // Phones get the native share sheet; otherwise copy. If everything is
+  // refused, the link is shown so it can be selected by hand.
+  const share = async () => {
+    if (isMobile && (await shareUrl(link, "Catan Table board"))) {
+      setCopied("shared");
+      return;
     }
+    setCopied((await copyText(link)) ? "copied" : "failed");
   };
 
   useEffect(() => {
-    if (copied === "idle") return;
+    if (copied === "idle" || copied === "failed") return;
     const t = window.setTimeout(() => setCopied("idle"), 2500);
     return () => clearTimeout(t);
   }, [copied]);
@@ -78,8 +86,8 @@ export const BoardTab = ({ mode, board, onBoardChange }: BoardTabProps) => {
                 <LockOpen /> Unlock all
               </Button>
             )}
-            <Button variant="outline" onClick={copyLink} aria-live="polite">
-              <Link2 /> {copied === "copied" ? "Link copied" : copied === "failed" ? "Copy failed" : "Share"}
+            <Button variant="outline" onClick={share} aria-live="polite">
+              <Link2 /> {copied === "copied" ? "Link copied" : copied === "shared" ? "Shared" : copied === "failed" ? "Copy blocked" : "Share"}
             </Button>
             <Button variant="outline" onClick={() => setTableView(true)}>
               <Expand /> Table view
@@ -88,6 +96,19 @@ export const BoardTab = ({ mode, board, onBoardChange }: BoardTabProps) => {
               <Printer /> Print
             </Button>
           </div>
+          {copied === "failed" && (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">This browser blocked the clipboard. Select the link and copy it by hand.</p>
+              <Input
+                readOnly
+                value={link}
+                onFocus={(e) => e.currentTarget.select()}
+                onClick={(e) => e.currentTarget.select()}
+                aria-label="Board link"
+                className="font-mono text-xs"
+              />
+            </div>
+          )}
           <p className="text-xs text-muted-foreground">
             Tap a hex to lock it, then reroll the rest. Seed <span className="font-mono">{seedToString(board.seed)}</span> · {rules.name}
           </p>
